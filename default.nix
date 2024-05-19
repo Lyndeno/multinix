@@ -16,9 +16,10 @@
 in rec {
   inherit loadFolder;
   makeNixosSystem = {
+    flakeRoot,
     hostFolder,
-    commonFolder,
-    modFolder,
+    commonFolder ? flakeRoot + "/common",
+    modFolder ? flakeRoot + "/mods",
     name,
     specialArgs ? {},
     defaultSystem ? null,
@@ -46,7 +47,7 @@ in rec {
       ];
     };
 
-  makeNixosSystems = {hostFolder, ...} @ args:
+  makeNixosSystems = {flakeRoot, hostFolder ? flakeRoot + "/hosts", ...} @ args:
     builtins.listToAttrs
     (
       map
@@ -54,7 +55,7 @@ in rec {
         inherit name;
         value = makeNixosSystem (args
           // {
-            inherit name;
+            inherit name hostFolder;
           });
       })
       (ls hostFolder)
