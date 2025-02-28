@@ -19,7 +19,7 @@ in rec {
     flakeRoot,
     hostFolder,
     commonFolder ? flakeRoot + "/common",
-    modFolder ? flakeRoot + "/mods",
+    modFolder ? flakeRoot + "/modules",
     name,
     specialArgs ? {},
     defaultSystem ? null,
@@ -61,7 +61,7 @@ in rec {
       (ls hostFolder)
     );
 
-  homes = homeFolder:
+  getHomes = homeFolder:
     builtins.listToAttrs
     (
       map
@@ -71,4 +71,23 @@ in rec {
       })
       (ls homeFolder)
     );
+
+  multinix = inputs: rec {
+    nixosConfigurations = let
+      homes = getHomes "${inputs.self}/home";
+      flakeLib = haumea.lib.load {
+        src = "${inputs.self}/lib";
+        inputs = {inherit inputs; };
+      transformer = haumea.lib.transformers.liftDefault;
+      };
+    in makeNixosSystems {
+      flakeRoot = inputs.self;
+      specialArgs = {inherit inputs homes flakeLib; };
+    };
+
+    hydraJobs = {
+      inherit (inputs.self.outputs) devShells;
+      nixos = builtins.mapAttrs (_name: value: value.config.system.build.toplevel) nixosConfigurations;
+    };
+  };
 }

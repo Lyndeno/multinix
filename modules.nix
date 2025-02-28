@@ -15,7 +15,7 @@ in
     inputs,
     ...
   } @ args: {
-    options.mods = builtins.listToAttrs (
+    options.modules = builtins.listToAttrs (
       map
       (
         x: {
@@ -28,7 +28,7 @@ in
     config = lib.mkMerge (
       map
       (
-        x: lib.mkIf config.mods.${x}.enable ((loadFolder (modFolder + "/${x}")) args)
+        x: lib.mkIf config.modules.${x}.enable ((loadFolder (modFolder + "/${x}")) args)
       )
       modNames
     );
